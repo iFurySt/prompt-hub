@@ -752,13 +752,29 @@
 
             async loadPromptStructure() {
                 try {
-                    // Try to load from GitHub API first, fallback to manual structure
-                    const structure = await this.fetchFromGitHubAPI() || this.getManualStructure();
-                    this.prompts = structure;
+                    // Check if we're running locally or on GitHub Pages
+                    const isLocal = window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                    
+                    if (isLocal) {
+                        console.log('Running locally, using direct structure');
+                        // For local development, use direct structure without API calls
+                        this.prompts = {
+                            'github': {
+                                'spark': ['latest.md', '2025-07-26.md']
+                            },
+                            'openai': {
+                                'chatgpt4o': ['2025-08-05.md']
+                            }
+                        };
+                    } else {
+                        // Try to load from GitHub API first, fallback to manual structure
+                        const structure = await this.fetchFromGitHubAPI() || await this.getLocalStructure();
+                        this.prompts = structure;
+                    }
                 } catch (error) {
                     console.error('Error loading prompt structure:', error);
                     // Fallback to manual structure
-                    this.prompts = this.getManualStructure();
+                    this.prompts = await this.getLocalStructure();
                 }
             }
 
@@ -813,15 +829,101 @@
                 }
             }
 
-            getManualStructure() {
+            async getLocalStructure() {
+                // For local development, we'll try to dynamically discover files
+                // First try GitHub API (works in browsers with CORS), then fallback to known structure
+                try {
+                    const structure = await this.fetchFromGitHubAPI();
+                    if (structure && Object.keys(structure).length > 0) {
+                        console.log('Successfully loaded structure from GitHub API:', structure);
+                        return structure;
+                    }
+                } catch (error) {
+                    console.log('GitHub API not available locally, using known structure');
+                }
+                
+                // Try to auto-discover by testing known paths
+                const structure = await this.autoDiscoverStructure();
+                if (Object.keys(structure).length > 0) {
+                    return structure;
+                }
+                
+                // Final fallback - Known structure based on actual directory layout
+                console.log('Using final fallback structure with both github and openai');
                 return {
                     'github': {
                         'spark': ['latest.md', '2025-07-26.md']
                     },
                     'openai': {
-                        // Add files as they're created
+                        'chatgpt4o': ['2025-08-05.md']
                     }
                 };
+            }
+
+            async autoDiscoverStructure() {
+                const structure = {};
+                const knownCompanies = ['github', 'openai', 'anthropic', 'google', 'microsoft'];
+                
+                for (const company of knownCompanies) {
+                    try {
+                        // Try to fetch the company directory README to see if it exists
+                        const testUrl = `${this.baseUrl}/${this.repoOwner}/${this.repoName}/main/${company}/README.md`;
+                        const response = await fetch(testUrl);
+                        
+                        if (response.ok) {
+                            console.log(`Found company directory: ${company}`);
+                            structure[company] = await this.discoverCompanyStructure(company);
+                        }
+                    } catch (error) {
+                        // Company directory doesn't exist, skip
+                        continue;
+                    }
+                }
+                
+                return structure;
+            }
+
+            async discoverCompanyStructure(company) {
+                const structure = {};
+                const knownProducts = {
+                    'github': ['spark', 'copilot', 'actions'],
+                    'openai': ['chatgpt4o', 'gpt4', 'chatgpt', 'dalle'],
+                    'anthropic': ['claude', 'claude-sonnet', 'claude-haiku'],
+                    'google': ['gemini', 'bard', 'palm'],
+                    'microsoft': ['copilot', 'bing-chat', 'azure-openai']
+                };
+                
+                const products = knownProducts[company] || [];
+                
+                for (const product of products) {
+                    try {
+                        // Try different file patterns
+                        const patterns = ['latest.md', '2025-08-05.md', '2025-07-26.md', 'README.md'];
+                        const foundFiles = [];
+                        
+                        for (const pattern of patterns) {
+                            const testUrl = `${this.baseUrl}/${this.repoOwner}/${this.repoName}/main/${company}/${product}/${pattern}`;
+                            try {
+                                const response = await fetch(testUrl);
+                                if (response.ok) {
+                                    foundFiles.push(pattern);
+                                }
+                            } catch (e) {
+                                // File doesn't exist, continue
+                            }
+                        }
+                        
+                        if (foundFiles.length > 0) {
+                            structure[product] = foundFiles;
+                            console.log(`Found files for ${company}/${product}:`, foundFiles);
+                        }
+                    } catch (error) {
+                        // Product directory doesn't exist, skip
+                        continue;
+                    }
+                }
+                
+                return structure;
             }
 
             renderCategories() {
