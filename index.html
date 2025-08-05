@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prompt Hub - Collection of AI Prompts</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --background: 220 33.3% 98.2%;
+            --background-contrast: 222.2 47.4% 11.2%;
+            --foreground: 222.2 47.4% 11.2%;
+            --foreground-contrast: 220 33.3% 98.2%;
+            --card: 220 33.3% 98.2%;
+            --card-foreground: 222.2 47.4% 11.2%;
+            --popover: 0 0% 100%;
+            --popover-foreground: 222.2 47.4% 11.2%;
+            --primary: 222.2 47.4% 11.2%;
+            --primary-foreground: 210 40% 98%;
+            --tp-orange: 30.4deg 97.1% 72.5%;
+            --tp-orange-foreground: 12deg 81.1% 14.5%;
+            --secondary: 210 40% 96.1%;
+            --secondary-foreground: 222.2 47.4% 11.2%;
+            --muted: 210 40% 96.1%;
+            --muted-foreground: 215.4 16.3% 46.9%;
+            --accent: 210 40% 96.1%;
+            --accent-foreground: 222.2 47.4% 11.2%;
+            --destructive: 0 84.2% 60.2%;
+            --destructive-foreground: 210 40% 98%;
+            --ghost: 214 25.9% 84.1%;
+            --ghost-foreground: 222.2 47.4% 11.2%;
+            --border: 214 25.9% 84.1%;
+            --border-contrast: 222.2 47.4% 11.2%;
+            --input: 214.3 31.8% 91.4%;
+            --ring: 222.2 47.4% 11.2%;
+            --skeleton: 214.3 31.8% 91.4%;
+            --code-block: 222.2 47.4% 11.2%;
+            --radius: 0.5rem;
+            --selection: 32 98% 83%;
+            --selection-foreground: 15 79% 34%;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: hsl(var(--background));
+            color: hsl(var(--foreground));
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: hsl(var(--card));
+            border: 2px solid hsl(var(--border-contrast));
+            position: relative;
+        }
+
+        .container::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            right: -2px;
+            bottom: -2px;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 2px,
+                hsl(var(--border)) 2px,
+                hsl(var(--border)) 4px
+            );
+            z-index: -1;
+        }
+
+        .header {
+            background: hsl(var(--background));
+            color: hsl(var(--foreground));
+            padding: 32px;
+            border-bottom: 2px solid hsl(var(--border-contrast));
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .header-logo {
+            width: 100px;
+            height: 100px;
+            flex-shrink: 0;
+            object-fit: contain;
+        }
+
+        .header-content {
+            text-align: left;
+            flex-grow: 0;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: hsl(var(--foreground));
+        }
+
+        .header p {
+            font-size: 0.875rem;
+            color: hsl(var(--muted-foreground));
+            font-weight: 400;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .header-content {
+                text-align: center;
+            }
+
+            .header-logo {
+                width: 48px;
+                height: 48px;
+            }
+
+            .header h1 {
+                font-size: 1.75rem;
+            }
+        }
+
+        .main-content {
+            display: flex;
+            min-height: 600px;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: hsl(var(--muted));
+            border-right: 2px solid hsl(var(--border-contrast));
+            padding: 24px 16px;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            background: hsl(var(--background));
+        }
+
+        .category {
+            margin-bottom: 16px;
+        }
+
+        .category-header {
+            padding: 12px 16px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: hsl(var(--foreground));
+            background: transparent;
+            margin-bottom: 4px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 2px solid transparent;
+        }
+
+        .category-header:hover {
+            background: hsl(var(--background));
+            border-color: hsl(var(--border));
+        }
+
+        .category-header.active {
+            background: hsl(var(--background));
+            border-color: hsl(var(--border-contrast));
+            color: hsl(var(--primary));
+        }
+
+        .prompt-list {
+            display: none;
+            padding: 0 16px;
+        }
+
+        .prompt-list.active {
+            display: block;
+        }
+
+        .prompt-item {
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            color: hsl(var(--muted-foreground));
+            font-size: 0.8125rem;
+            margin: 2px 0;
+            border: 2px solid transparent;
+        }
+
+        .prompt-item:hover {
+            background: hsl(var(--background));
+            border-color: hsl(var(--border));
+            color: hsl(var(--foreground));
+        }
+
+        .prompt-item.active {
+            background: hsl(var(--background));
+            border-color: hsl(var(--primary));
+            color: hsl(var(--primary));
+            font-weight: 500;
+        }
+
+        .prompt-content {
+            background: hsl(var(--card));
+            border: 2px solid hsl(var(--border-contrast));
+            padding: 24px;
+            position: relative;
+        }
+
+        .prompt-content::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            right: -2px;
+            bottom: -2px;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 2px,
+                hsl(var(--border)) 2px,
+                hsl(var(--border)) 4px
+            );
+            z-index: -1;
+        }
+
+        .prompt-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: hsl(var(--foreground));
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid hsl(var(--border));
+        }
+
+        .prompt-body {
+            line-height: 1.6;
+            color: hsl(var(--foreground));
+            font-size: 0.875rem;
+        }
+
+        .prompt-body h1, .prompt-body h2, .prompt-body h3 {
+            margin-top: 20px;
+            margin-bottom: 12px;
+            color: hsl(var(--foreground));
+        }
+
+        .prompt-body h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: hsl(var(--primary));
+        }
+
+        .prompt-body h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: hsl(var(--primary));
+        }
+
+        .prompt-body h3 {
+            font-size: 1rem;
+            font-weight: 500;
+            color: hsl(var(--foreground));
+        }
+
+        .prompt-body p {
+            margin-bottom: 15px;
+        }
+
+        .prompt-body ul, .prompt-body ol {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        .prompt-body li {
+            margin-bottom: 5px;
+        }
+
+        .prompt-body code {
+            background: hsl(var(--code-block));
+            color: hsl(var(--foreground-contrast));
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.8125rem;
+            border: 1px solid hsl(var(--border));
+        }
+
+        .prompt-body pre {
+            background: hsl(var(--code-block));
+            padding: 16px;
+            border: 2px solid hsl(var(--border-contrast));
+            overflow-x: auto;
+            margin: 12px 0;
+            position: relative;
+        }
+
+        .prompt-body pre::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            right: -2px;
+            bottom: -2px;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 2px,
+                hsl(var(--border)) 2px,
+                hsl(var(--border)) 4px
+            );
+            z-index: -1;
+        }
+
+        .prompt-body pre code {
+            background: none;
+            padding: 0;
+            border: none;
+            color: hsl(var(--foreground-contrast));
+        }
+
+        .loading {
+            text-align: center;
+            padding: 48px 20px;
+            color: hsl(var(--muted-foreground));
+        }
+
+        .loading-spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid hsl(var(--border));
+            border-top: 3px solid hsl(var(--primary));
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: hsl(var(--background));
+            border: 2px solid hsl(var(--destructive));
+            color: hsl(var(--destructive));
+            padding: 16px;
+            margin: 16px 0;
+            font-size: 0.875rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px 20px;
+            color: hsl(var(--muted-foreground));
+        }
+
+        .empty-state h3 {
+            font-size: 1rem;
+            margin-bottom: 8px;
+            color: hsl(var(--foreground));
+            font-weight: 500;
+        }
+
+        .expand-icon {
+            transition: transform 0.2s ease;
+        }
+
+        .expand-icon.expanded {
+            transform: rotate(90deg);
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 2px solid hsl(var(--border-contrast));
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .container {
+                margin: 10px;
+            }
+
+            .footer {
+                padding: 16px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+
+        .footer {
+            background: hsl(var(--muted));
+            border-top: 2px solid hsl(var(--border-contrast));
+            padding: 24px 32px;
+            text-align: center;
+            font-size: 0.8125rem;
+            color: hsl(var(--muted-foreground));
+        }
+
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .footer-link {
+            color: hsl(var(--primary));
+            text-decoration: none;
+            transition: all 0.15s ease;
+            padding: 4px 8px;
+            border: 2px solid transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .footer-link:hover {
+            background: hsl(var(--background));
+            border-color: hsl(var(--border));
+            text-decoration: none;
+        }
+
+        .github-icon {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        @media (max-width: 768px) {
+            .footer-links {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+
+        .overview-panel {
+            padding: 0;
+        }
+
+        .overview-header {
+            padding: 24px;
+            border-bottom: 1px solid hsl(var(--border));
+        }
+
+        .overview-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: hsl(var(--foreground));
+            margin-bottom: 8px;
+        }
+
+        .overview-subtitle {
+            color: hsl(var(--muted-foreground));
+            font-size: 0.875rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            padding: 24px;
+        }
+
+        .stat-card {
+            background: hsl(var(--card));
+            border: 2px solid hsl(var(--border));
+            padding: 20px;
+            position: relative;
+            text-align: center;
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            right: -2px;
+            bottom: -2px;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 2px,
+                hsl(var(--border)) 2px,
+                hsl(var(--border)) 4px
+            );
+            z-index: -1;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: hsl(var(--primary));
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: hsl(var(--muted-foreground));
+            font-weight: 500;
+        }
+
+        .companies-section {
+            padding: 0 24px 24px;
+        }
+
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: hsl(var(--foreground));
+            margin-bottom: 16px;
+            padding-left: 4px;
+        }
+
+        .company-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .company-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border: 2px solid hsl(var(--border));
+            background: hsl(var(--card));
+            transition: all 0.15s ease;
+        }
+
+        .company-item:hover {
+            border-color: hsl(var(--primary));
+            background: hsl(var(--accent));
+        }
+
+        .company-name {
+            font-weight: 500;
+            color: hsl(var(--foreground));
+            font-size: 0.875rem;
+            text-transform: capitalize;
+        }
+
+        .company-count {
+            background: hsl(var(--primary));
+            color: hsl(var(--primary-foreground));
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: hsl(var(--muted));
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: hsl(var(--primary));
+            border-radius: 3px;
+            transition: width 0.8s ease;
+        }
+
+        .recent-section {
+            padding: 0 24px 24px;
+            border-top: 1px solid hsl(var(--border));
+            margin-top: 16px;
+            padding-top: 24px;
+        }
+
+        .recent-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: all 0.15s ease;
+        }
+
+        .recent-item:hover {
+            background: hsl(var(--accent));
+        }
+
+        .recent-name {
+            font-size: 0.8125rem;
+            color: hsl(var(--foreground));
+        }
+
+        .recent-path {
+            font-size: 0.75rem;
+            color: hsl(var(--muted-foreground));
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+                padding: 16px;
+            }
+
+            .overview-header {
+                padding: 16px;
+            }
+
+            .companies-section, .recent-section {
+                padding: 0 16px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="logo.png" alt="Prompt Hub Logo" class="header-logo">
+            <div class="header-content">
+                <h1>Prompt Hub</h1>
+                <p>A curated collection of AI prompts for various platforms and use cases</p>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <div id="prompt-categories">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <p>Loading prompts...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <div id="prompt-display">
+                    <div id="overview-panel" class="overview-panel">
+                        <div class="overview-header">
+                            <h2 class="overview-title">📊 Prompt Hub Overview</h2>
+                            <p class="overview-subtitle">Comprehensive collection of AI prompts from leading platforms</p>
+                        </div>
+
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-number" id="total-prompts">-</div>
+                                <div class="stat-label">Total Prompts</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="total-companies">-</div>
+                                <div class="stat-label">Companies/Platforms</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="avg-prompts">-</div>
+                                <div class="stat-label">Avg per Platform</div>
+                            </div>
+                        </div>
+
+                        <div class="companies-section">
+                            <h3 class="section-title">Companies & Platforms</h3>
+                            <div class="company-list" id="company-stats">
+                                <!-- Will be populated by JavaScript -->
+                            </div>
+                        </div>
+
+                        <div class="recent-section">
+                            <h3 class="section-title">Recently Added</h3>
+                            <div id="recent-prompts">
+                                <!-- Will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="footer-content">
+                <div>
+                    Open source project by <strong>Leo</strong> • Welcome to contribute!
+                </div>
+                <div class="footer-links">
+                    <a href="https://github.com/ifuryst/prompt-hub" target="_blank" class="footer-link">
+                        <svg class="github-icon" viewBox="0 0 16 16">
+                            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                        </svg>
+                        View on GitHub
+                    </a>
+                    <span>•</span>
+                    <a href="mailto:ifuryst@gmail.com" class="footer-link">
+                        Contact Leo
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Repository structure and prompt management
+        class PromptHub {
+            constructor() {
+                this.baseUrl = 'https://raw.githubusercontent.com';
+                this.apiUrl = 'https://api.github.com/repos';
+                this.repoOwner = window.location.hostname.includes('github.io')
+                    ? window.location.pathname.split('/')[1]
+                    : 'ifuryst'; // fallback to current username
+                this.repoName = 'prompt-hub';
+                this.prompts = {};
+                this.currentPrompt = null;
+
+                this.init();
+            }
+
+            async init() {
+                await this.loadPromptStructure();
+                this.renderCategories();
+            }
+
+            async loadPromptStructure() {
+                try {
+                    // Try to load from GitHub API first, fallback to manual structure
+                    const structure = await this.fetchFromGitHubAPI() || this.getManualStructure();
+                    this.prompts = structure;
+                } catch (error) {
+                    console.error('Error loading prompt structure:', error);
+                    // Fallback to manual structure
+                    this.prompts = this.getManualStructure();
+                }
+            }
+
+            async fetchFromGitHubAPI() {
+                try {
+                    const response = await fetch(`${this.apiUrl}/${this.repoOwner}/${this.repoName}/contents`);
+                    if (!response.ok) throw new Error('API request failed');
+
+                    const contents = await response.json();
+                    const structure = {};
+
+                    for (const item of contents) {
+                        if (item.type === 'dir' && !item.name.startsWith('.')) {
+                            structure[item.name] = await this.fetchDirectoryContents(item.path);
+                        }
+                    }
+
+                    return structure;
+                } catch (error) {
+                    console.warn('GitHub API failed, using manual structure:', error);
+                    return null;
+                }
+            }
+
+            async fetchDirectoryContents(path) {
+                try {
+                    const response = await fetch(`${this.apiUrl}/${this.repoOwner}/${this.repoName}/contents/${path}`);
+                    if (!response.ok) throw new Error('API request failed');
+
+                    const contents = await response.json();
+                    const structure = {};
+
+                    for (const item of contents) {
+                        if (item.type === 'dir') {
+                            const subContents = await fetch(`${this.apiUrl}/${this.repoOwner}/${this.repoName}/contents/${item.path}`);
+                            if (subContents.ok) {
+                                const subFiles = await subContents.json();
+                                structure[item.name] = subFiles
+                                    .filter(file => file.type === 'file' && file.name.endsWith('.md'))
+                                    .map(file => file.name);
+                            }
+                        } else if (item.type === 'file' && item.name.endsWith('.md')) {
+                            if (!structure['_root']) structure['_root'] = [];
+                            structure['_root'].push(item.name);
+                        }
+                    }
+
+                    return structure;
+                } catch (error) {
+                    console.warn('Failed to fetch directory contents for', path);
+                    return {};
+                }
+            }
+
+            getManualStructure() {
+                return {
+                    'github': {
+                        'spark': ['latest.md', '2025-07-26.md']
+                    },
+                    'openai': {
+                        // Add files as they're created
+                    }
+                };
+            }
+
+            renderCategories() {
+                const container = document.getElementById('prompt-categories');
+                let html = '';
+
+                if (Object.keys(this.prompts).length === 0) {
+                    html = `
+                        <div class="empty-state">
+                            <h3>No prompts found</h3>
+                            <p>Add some markdown files to your repository to see them here.</p>
+                        </div>
+                    `;
+                } else {
+                    for (const [category, subcategories] of Object.entries(this.prompts)) {
+                        if (Object.keys(subcategories).length === 0) continue;
+
+                        html += `
+                            <div class="category">
+                                <div class="category-header" onclick="toggleCategory('${category}')">
+                                    <span>${category.charAt(0).toUpperCase() + category.slice(1)}</span>
+                                    <span class="expand-icon">▶</span>
+                                </div>
+                                <div class="prompt-list" id="category-${category}">
+                        `;
+
+                        if (typeof subcategories === 'object' && subcategories !== null) {
+                            for (const [subcategory, files] of Object.entries(subcategories)) {
+                                if (Array.isArray(files) && files.length > 0) {
+                                    for (const file of files) {
+                                        const fileName = file.replace('.md', '');
+                                        const displayName = subcategory === '_root'
+                                            ? fileName
+                                            : `${subcategory}/${fileName}`;
+
+                                        html += `
+                                            <div class="prompt-item" onclick="loadPrompt('${category}', '${subcategory}', '${file}')">
+                                                ${displayName}
+                                            </div>
+                                        `;
+                                    }
+                                }
+                            }
+                        }
+
+                        html += `
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+
+                container.innerHTML = html;
+                this.updateOverviewStats();
+            }
+
+            updateOverviewStats() {
+                let totalPrompts = 0;
+                const companyStats = {};
+
+                // Calculate statistics
+                for (const [category, subcategories] of Object.entries(this.prompts)) {
+                    if (typeof subcategories === 'object' && subcategories !== null) {
+                        let categoryPrompts = 0;
+                        for (const [subcategory, files] of Object.entries(subcategories)) {
+                            if (Array.isArray(files)) {
+                                categoryPrompts += files.length;
+                            }
+                        }
+                        if (categoryPrompts > 0) {
+                            companyStats[category] = categoryPrompts;
+                            totalPrompts += categoryPrompts;
+                        }
+                    }
+                }
+
+                const totalCompanies = Object.keys(companyStats).length;
+                const avgPrompts = totalCompanies > 0 ? Math.round(totalPrompts / totalCompanies) : 0;
+
+                // Update stats display
+                document.getElementById('total-prompts').textContent = totalPrompts;
+                document.getElementById('total-companies').textContent = totalCompanies;
+                document.getElementById('avg-prompts').textContent = avgPrompts;
+
+                // Update company stats
+                this.renderCompanyStats(companyStats, totalPrompts);
+                this.renderRecentPrompts();
+            }
+
+            renderCompanyStats(companyStats, totalPrompts) {
+                const container = document.getElementById('company-stats');
+                let html = '';
+
+                // Sort companies by prompt count
+                const sortedCompanies = Object.entries(companyStats)
+                    .sort(([,a], [,b]) => b - a);
+
+                for (const [company, count] of sortedCompanies) {
+                    const percentage = totalPrompts > 0 ? (count / totalPrompts * 100) : 0;
+
+                    html += `
+                        <div class="company-item">
+                            <div>
+                                <div class="company-name">${company}</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${percentage}%"></div>
+                                </div>
+                            </div>
+                            <div class="company-count">${count}</div>
+                        </div>
+                    `;
+                }
+
+                if (html === '') {
+                    html = '<div class="empty-state"><p>No data available</p></div>';
+                }
+
+                container.innerHTML = html;
+            }
+
+            renderRecentPrompts() {
+                const container = document.getElementById('recent-prompts');
+                let html = '';
+                const recentItems = [];
+
+                // Collect all prompts with mock dates (in real implementation, you'd use file modification dates)
+                for (const [category, subcategories] of Object.entries(this.prompts)) {
+                    if (typeof subcategories === 'object' && subcategories !== null) {
+                        for (const [subcategory, files] of Object.entries(subcategories)) {
+                            if (Array.isArray(files)) {
+                                for (const file of files) {
+                                    const fileName = file.replace('.md', '');
+                                    const displayName = subcategory === '_root'
+                                        ? fileName
+                                        : `${subcategory}/${fileName}`;
+
+                                    recentItems.push({
+                                        name: fileName,
+                                        path: `${category}/${displayName}`,
+                                        category,
+                                        subcategory,
+                                        file
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Show last 5 items (in real implementation, sort by actual date)
+                const displayItems = recentItems.slice(-5).reverse();
+
+                for (const item of displayItems) {
+                    html += `
+                        <div class="recent-item" onclick="loadPrompt('${item.category}', '${item.subcategory}', '${item.file}')">
+                            <div>
+                                <div class="recent-name">${item.name}</div>
+                                <div class="recent-path">${item.path}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                if (html === '') {
+                    html = '<div class="empty-state"><p>No recent prompts</p></div>';
+                }
+
+                container.innerHTML = html;
+            }
+
+            async loadPrompt(category, subcategory, filename) {
+                const container = document.getElementById('prompt-display');
+                container.innerHTML = `
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <p>Loading prompt...</p>
+                    </div>
+                `;
+
+                try {
+                    // Handle root-level files
+                    const path = subcategory === '_root'
+                        ? `${category}/${filename}`
+                        : `${category}/${subcategory}/${filename}`;
+
+                    const url = `${this.baseUrl}/${this.repoOwner}/${this.repoName}/main/${path}`;
+                    const response = await fetch(url);
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const content = await response.text();
+                    this.displayPrompt(filename, content);
+                    this.updateActivePrompt(category, subcategory, filename);
+                } catch (error) {
+                    console.error('Error loading prompt:', error);
+                    this.showError(`Failed to load prompt: ${error.message}`);
+                }
+            }
+
+            displayPrompt(filename, content) {
+                const container = document.getElementById('prompt-display');
+                const title = filename.replace('.md', '');
+
+                // Convert markdown to HTML (basic conversion)
+                const htmlContent = this.markdownToHtml(content);
+
+                container.innerHTML = `
+                    <div class="prompt-content">
+                        <h1 class="prompt-title">${title}</h1>
+                        <div class="prompt-body">${htmlContent}</div>
+                    </div>
+                `;
+            }
+
+            showOverview() {
+                const container = document.getElementById('prompt-display');
+                const overviewPanel = document.getElementById('overview-panel');
+                if (overviewPanel) {
+                    container.innerHTML = overviewPanel.outerHTML;
+                    this.updateOverviewStats();
+                }
+            }
+
+            markdownToHtml(markdown) {
+                return markdown
+                    // Headers
+                    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                    // Bold
+                    .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+                    // Italic
+                    .replace(/\*(.*)\*/gim, '<em>$1</em>')
+                    // Code blocks
+                    .replace(/```([\s\S]*?)```/gim, '<pre><code>$1</code></pre>')
+                    // Inline code
+                    .replace(/`([^`]*)`/gim, '<code>$1</code>')
+                    // Lists
+                    .replace(/^\* (.*$)/gim, '<li>$1</li>')
+                    .replace(/^- (.*$)/gim, '<li>$1</li>')
+                    // Paragraphs
+                    .replace(/\n\n/gim, '</p><p>')
+                    .replace(/^(?!<[hl]|<li|<pre|<code)(.+)$/gim, '<p>$1</p>')
+                    // Clean up
+                    .replace(/<p><\/p>/gim, '')
+                    .replace(/<p>(<[hl])/gim, '$1')
+                    .replace(/(<\/[hl]>)<\/p>/gim, '$1');
+            }
+
+            updateActivePrompt(category, subcategory, filename) {
+                // Remove previous active states
+                document.querySelectorAll('.prompt-item.active').forEach(item => {
+                    item.classList.remove('active');
+                });
+
+                // Add active state to current prompt
+                const displayName = subcategory === '_root'
+                    ? filename.replace('.md', '')
+                    : `${subcategory}/${filename.replace('.md', '')}`;
+
+                document.querySelectorAll('.prompt-item').forEach(item => {
+                    if (item.textContent.trim() === displayName) {
+                        item.classList.add('active');
+                    }
+                });
+
+                this.currentPrompt = { category, subcategory, filename };
+            }
+
+            showError(message) {
+                const container = document.getElementById('prompt-display');
+                container.innerHTML = `
+                    <div class="error">
+                        <strong>Error:</strong> ${message}
+                    </div>
+                `;
+            }
+        }
+
+        // Global functions
+        function toggleCategory(category) {
+            const categoryList = document.getElementById(`category-${category}`);
+            const header = categoryList.previousElementSibling;
+            const icon = header.querySelector('.expand-icon');
+
+            if (categoryList.classList.contains('active')) {
+                categoryList.classList.remove('active');
+                header.classList.remove('active');
+                icon.classList.remove('expanded');
+            } else {
+                categoryList.classList.add('active');
+                header.classList.add('active');
+                icon.classList.add('expanded');
+            }
+        }
+
+        function loadPrompt(category, subcategory, filename) {
+            window.promptHub.loadPrompt(category, subcategory, filename);
+        }
+
+        // Initialize the app
+        window.addEventListener('DOMContentLoaded', () => {
+            window.promptHub = new PromptHub();
+        });
+    </script>
+</body>
+</html>
